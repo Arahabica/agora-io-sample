@@ -14,6 +14,16 @@
 
 3. memo APP ID and APP Certificate.
 
+# Setup
+
+1. install Node.js and yarn.
+
+2. install packages.
+
+   ```bash
+   $ yarn install
+   ```
+
 # Run
 
 ```bash
