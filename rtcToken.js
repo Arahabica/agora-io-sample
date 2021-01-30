@@ -1,8 +1,12 @@
 const { RtcTokenBuilder, RtcRole } = require('agora-access-token')
 
 // Fill the appID and appCertificate key given by Agora.io
-const appID = "YOUR_APP_ID";
-const appCertificate = "YOUR_APP_CERTIFICATE";
+const appID = process.env.APP_ID;
+const appCertificate= process.env.APP_CERTIFICATE;
+
+// This is sample.
+//const appID = "970CA35de60c44645bbae8a215061b33"
+//const appCertificate= "5CFd2fd1755d40ecb72977518be15d3b"
 
 // token expire time, hardcode to 3600 seconds = 1 hour
 const expirationTimeInSeconds = 3600
@@ -20,7 +24,7 @@ const generateRtcToken = function(req, resp) {
 
   var key = RtcTokenBuilder.buildTokenWithUid(appID, appCertificate, channelName, uid, role, privilegeExpiredTs);
 
-  return resp.json({ 'key': key }).send()
+  return resp.json({ 'key': key });
 }
 
 module.exports = generateRtcToken

@@ -2,6 +2,16 @@ html, body {
   margin: 0;
   padding: 0;
 }
+
+input {
+  appearance: none;
+  background: transparent;
+  border-radius: 0;
+  font: inherit;
+  padding: 4px;
+  outline: none;
+  border: solid 1px #222222;
+}
 button {
   background-color: transparent;
   border: none;
@@ -37,12 +47,20 @@ button {
 }
 
 #join-form {
-  margin-top: 10px;
+  display: flex;
+  align-items: flex-end;
+}
+#join-form .info {
+  font-size: 12px;
+  margin-bottom: 2px;
 }
 #join-form button {
   padding: 5px 10px 5px 10px;
   background-color: #1f9ffa;
   color: #ffffff;
+  height: 34px;
+  width: 80px;
+  margin-left: 10px;
 }
 
 #join-form button:disabled {

@@ -1,4 +1,4 @@
-function onLoad() {
+async function onLoad() {
   // create Agora client
   const client = AgoraRTC.createClient({mode: "rtc", codec: "vp8"});
 
@@ -7,10 +7,8 @@ function onLoad() {
     audioTrack: null
   };
   let remoteUsers = {};
-  // Agora client options
-  const options = {
-    appid: 'YOUR_APP_ID',
-  };
+  let agoraAppId = await getAppId();
+  console.info(`Your agora.io appId is ${agoraAppId}`);
   // add event listeners
   document.getElementById('join-form')
     .addEventListener('submit', async function(e) {
@@ -39,12 +37,17 @@ function onLoad() {
     client.on("user-unpublished", handleUserUnpublished);
 
     let uid
-    const channelName = 'hoge3';
+    const channelName = document.getElementById('channel').value;
+    console.info(`channel name is ${agoraAppId}`);
+    if (!channelName) {
+      throw new Error('channel name is required.')
+    }
     const token = await getToken(channelName);
+    console.info(`Your token is ${token}`);
     // join a channel and create local tracks, we can use Promise.all to run them concurrently
     [uid, localTracks.audioTrack, localTracks.videoTrack] = await Promise.all([
       // join the channel
-      client.join(options.appid, channelName, token),
+      client.join(agoraAppId, channelName, token),
       // create local tracks, using microphone and camera
       AgoraRTC.createMicrophoneAudioTrack(),
       AgoraRTC.createCameraVideoTrack(),
@@ -60,6 +63,11 @@ function onLoad() {
     console.log("publish success");
   }
 
+  async function getAppId() {
+    const response = await fetch("/appId");
+    const data = await response.json();
+    return data.appId;
+  }
   async function getToken(channelName) {
     const response = await fetch("/rtcToken?" + new URLSearchParams({channelName}));
     const data = await response.json();
