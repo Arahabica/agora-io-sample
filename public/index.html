@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Video Call Test -- Agora</title>
+  <link rel="stylesheet" href="./index.css">
+</head>
+<body>
+  <div id="success-alert">
+    <strong>Congratulations!</strong>
+    <span> Joined room successfully. </span>
+    <button id="alert-close" type="button">x</button>
+  </div>
+  <div class="container">
+    <form id="join-form">
+      <button id="join" type="submit">Join</button>
+      <button id="leave" type="button" disabled>Leave</button>
+    </form>
+    <div>
+      <div>
+        <p id="local-player-name" class="player-name"></p>
+        <div id="local-player" class="player"></div>
+      </div>
+      <div id="remote-player-list"></div>
+    </div>
+  </div>
+  <!-- You can install through npm. check https://docs.agora.io/en/live-streaming/start_live_web_ng?platform=Web  -->
+  <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.3.0.js"></script>
+  <script src="./index.js"></script>
+</body>
+</html>
