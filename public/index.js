@@ -15,7 +15,10 @@ async function onLoad() {
       e.preventDefault();
       document.getElementById('join').setAttribute("disabled", "");
       try {
-        await join();
+        const channelName = document.getElementById('channel').value;
+        console.info(`channel name is ${agoraAppId}`);
+        const uid = await join(channelName);
+        document.getElementById("local-player-name").textContent = `localVideo(${uid})`;
         document.getElementById('success-alert').classList.add("show");
       } catch (error) {
         console.error(error);
@@ -29,19 +32,15 @@ async function onLoad() {
     document.getElementById('success-alert').classList.remove("show");
   });
 
-
-
-  async function join() {
+  async function join(channelName) {
+    if (!channelName) {
+      throw new Error('channel name is required.')
+    }
     // add event listener to play remote tracks when remote user publishs.
     client.on("user-published", handleUserPublished);
     client.on("user-unpublished", handleUserUnpublished);
 
     let uid
-    const channelName = document.getElementById('channel').value;
-    console.info(`channel name is ${agoraAppId}`);
-    if (!channelName) {
-      throw new Error('channel name is required.')
-    }
     const token = await getToken(channelName);
     console.info(`Your token is ${token}`);
     // join a channel and create local tracks, we can use Promise.all to run them concurrently
@@ -56,11 +55,11 @@ async function onLoad() {
 
     // play local video track
     localTracks.videoTrack.play("local-player");
-    document.getElementById("local-player-name").textContent = `localVideo(${uid})`;
 
     // publish local tracks to channel
     await client.publish(Object.values(localTracks));
     console.log("publish success");
+    return uid;
   }
 
   async function getAppId() {

@@ -67,7 +67,9 @@ button {
   background-color: #cee0fa;
   cursor: not-allowed;
 }
-
+.all-players {
+  display: flex;
+}
 .player {
   width: 480px;
   height: 320px;
@@ -77,6 +79,9 @@ button {
   margin: 8px 0;
 }
 
+#remote-player-list {
+  margin-left: 20px;
+}
 @media (max-width: 640px) {
   .player {
     width: 320px;
