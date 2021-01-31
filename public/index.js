@@ -1,7 +1,8 @@
 async function onLoad() {
-  // create Agora client
-  const client = AgoraRTC.createClient({mode: "rtc", codec: "vp8"});
-
+  const socketio = io();
+  let myKeys = null;
+  let client = null;
+  let channelName = null;
   const localTracks = {
     videoTrack: null,
     audioTrack: null
@@ -15,22 +16,44 @@ async function onLoad() {
       e.preventDefault();
       document.getElementById('join').setAttribute("disabled", "");
       try {
-        const channelName = document.getElementById('channel').value;
-        console.info(`channel name is ${agoraAppId}`);
-        const uid = await join(channelName);
-        document.getElementById("local-player-name").textContent = `localVideo(${uid})`;
-        document.getElementById('success-alert').classList.add("show");
+        myKeys = await generateKey();
+        channelName = document.getElementById('channel').value;
+        console.info(`APP Id is ${agoraAppId}`);
+        socketio.emit('join', channelName, myKeys.base64PublicKey);
+        document.getElementById('waiting-alert').classList.add("show");
       } catch (error) {
         console.error(error);
-      } finally {
         document.getElementById('leave').removeAttribute("disabled");
       }
     });
 
   document.getElementById('leave').addEventListener("click", leave);
-  document.getElementById('alert-close').addEventListener("click", function(e) {
-    document.getElementById('success-alert').classList.remove("show");
+  document.querySelectorAll('.alert-close').forEach(element => {
+    element.addEventListener("click", function(e) {
+      e.target.closest('.alert').classList.remove("show");
+    });
   });
+
+  socketio.on("publicKey", async (data)=>{
+    const { room, publicKey } = data;
+    // console.log("public key: " + publicKey);
+    const aesKey = await deriveKey(myKeys.privateKey, publicKey);
+    // console.log("AES key: " + aesKey);
+    client = AgoraRTC.createClient({mode: "rtc", codec: "vp8"});
+    client.setEncryptionConfig("aes-128-xts", aesKey);
+    myKeys = null;
+
+    const uid = await join(room);
+    document.getElementById("local-player-name").textContent = `localVideo(${uid})`;
+    document.getElementById('success-alert').classList.add("show");
+    document.getElementById('waiting-alert').classList.remove("show");
+    document.getElementById('leave').removeAttribute("disabled");
+  });
+  socketio.on("leave", () =>{
+    document.getElementById('full-alert').classList.add("show");
+    document.getElementById('waiting-alert').classList.remove("show");
+    document.getElementById("join").removeAttribute("disabled");
+  })
 
   async function join(channelName) {
     if (!channelName) {
@@ -73,7 +96,6 @@ async function onLoad() {
     return data.key;
   }
 
-
   async function leave() {
     for (const trackName in localTracks) {
       const track = localTracks[trackName];
@@ -90,6 +112,7 @@ async function onLoad() {
 
     // leave the channel
     await client.leave();
+    socketio.emit('leave', channelName);
 
     document.getElementById("local-player-name").textContent = "";
     document.getElementById("join").removeAttribute("disabled");
@@ -125,13 +148,61 @@ async function onLoad() {
     await subscribe(user, mediaType);
   }
 
-  function handleUserUnpublished(user) {
+  async function handleUserUnpublished(user) {
     const id = user.uid;
     delete remoteUsers[id];
     const element = document.getElementById(`player-wrapper-${id}`);
     if (element) {
       element.remove()
     }
+    // 現状は2人じゃないと部屋を作らない
+    await leave();
+  }
+  async function generateKey(){
+    const ec = {
+      name: "ECDH",
+      namedCurve: "P-521"
+    };
+    const usage = ["deriveKey"];
+    const keys = await crypto.subtle.generateKey(ec, true, usage);
+    const exportedPublicKey = await crypto.subtle.exportKey("spki", keys.publicKey);
+    const base64PublicKey = btoa(String.fromCharCode.apply(null, new Uint8Array(exportedPublicKey)));
+    return {
+      privateKey: keys.privateKey,
+      base64PublicKey: base64PublicKey
+    }
+  }
+  async function deriveKey(myPrivateKey, otherBase64PublicKey){
+    function base64ToBuffer(base64Text) {
+      let binary = atob(base64Text);
+      let len = binary.length;
+      let bytes = new Uint8Array(len);
+      for (let i = 0; i < len; i++) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+      return bytes;
+    }
+    async function keyImport(base64Key){
+      const key = base64ToBuffer(base64Key).buffer;
+      const ec = {
+        name: "ECDH",
+        namedCurve: "P-521"
+      };
+      return await crypto.subtle.importKey("spki", key, ec, false, []);
+    }
+    const pub = await keyImport(otherBase64PublicKey)
+    const aes = {
+      name: "AES-GCM",
+      length: 256
+    };
+    const ec = {
+      name: "ECDH",
+      public: pub
+    };
+    const usage = ["encrypt", "decrypt"];
+    const key = await crypto.subtle.deriveKey(ec, myPrivateKey, aes, true, usage);
+    const buffer = await crypto.subtle.exportKey("raw", key);
+    return btoa(String.fromCharCode.apply(null, new Uint8Array(buffer)));
   }
 }
 window.onload = onLoad;

@@ -8,10 +8,19 @@
   <link rel="stylesheet" href="./index.css">
 </head>
 <body>
-  <div id="success-alert">
+  <div id="success-alert" class="alert">
     <strong>Congratulations!</strong>
     <span> Joined room successfully. </span>
-    <button id="alert-close" type="button">x</button>
+    <button class="alert-close" type="button">x</button>
+  </div>
+  <div id="waiting-alert" class="alert">
+    <span> Waiting for other users...</span>
+    <button class="alert-close" type="button">x</button>
+  </div>
+  <div id="full-alert" class="alert">
+    <strong>Oops!</strong>
+    <span> The room is full. </span>
+    <button class="alert-close" type="button">x</button>
   </div>
   <div class="container">
     <form id="join-form">
@@ -32,6 +41,7 @@
   </div>
   <!-- You can install through npm. check https://docs.agora.io/en/live-streaming/start_live_web_ng?platform=Web  -->
   <script src="https://download.agora.io/sdk/release/AgoraRTC_N-4.3.0.js"></script>
+  <script src="https://cdn.socket.io/socket.io-3.0.1.min.js"></script>
   <script src="./index.js"></script>
 </body>
 </html>
